@@ -1,0 +1,66 @@
+@use './partials/breakpoints'as *;
+@use './partials/colors'as *;
+
+
+* {
+  padding: 0px;
+  margin: 0px;
+  box-sizing: border-box;
+}
+
+.App {
+  text-align: center;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: $AppGray;
+
+  @include tablet {
+    flex-direction: row;
+  }
+}
+
+.content {
+  flex-basis: 70%;
+  display: flex;
+  flex-direction: column;
+  background-color: #f8f8f8;
+  margin: 1rem;
+  border: 1px solid $OffBlack;
+
+  &__nav {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    column-gap: 5rem;
+    padding: 1rem;
+    border-bottom: 1px solid $OffBlack;
+    background-color: #ebeef0;
+
+    @include tablet {
+      flex-direction: row;
+    }
+  }
+
+  &__label {
+    max-width: 30%;
+    font-weight: 600;
+  }
+
+  &__dropdown{
+    outline: none;
+    border-radius: 25px;
+    padding: 0.25rem 1rem;
+  }
+}
+
+.bestBidAsk {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+
+  @include tablet {
+    flex-direction: row;
+  }
+}
