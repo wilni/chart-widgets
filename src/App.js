@@ -4,7 +4,6 @@ import axios from "axios";
 import LadderView from './components/LadderView/LadderView.js';
 import BestBidAsk from './components/BestBidAsk/BestBidAsk.js';
 import Chart from './components/Chart/Chart.js';
-import candleData from './data.js';
 const timestamp = require('unix-timestamp');
 timestamp.round = true;
 
@@ -13,7 +12,7 @@ function App() {
   const [currencies, setCurrencies] = useState(['BTC-USD', 'ETH-USD', 'BCH-USD', 'LTC-USD'])
   const [pair, setPair] = useState('BTC-USD');
   const [price, setPrice] = useState(() => '0.00');
-  const [pairHistory, setPairHistory] = useState(candleData);
+  const [pairHistory, setPairHistory] = useState([]);
   const [timeFrame, setTimeFrame] = useState('60');
   const [currentBar, setCurrentBar] = useState(null);
   const ws = useRef(null);
