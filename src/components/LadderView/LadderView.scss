@@ -1,3 +1,82 @@
+@use '../../partials/colors.scss'as *;
+@use '../../partials/breakpoints.scss'as *;
+
+
 .ladder-view {
-flex-basis: 30%;
+    flex-basis: 30%;
+    margin: 1rem;
+    color: white;
+    background-color: $OrderBookblack;
+
+    &__title {
+        font-size: 1.25rem;
+        padding-left: 1rem;
+
+        &-holder {
+            flex-basis: 10%;
+            background: $OffBlack;
+            height: 3.5rem;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+        }
+    }
+
+    &__nav {
+        display: flex;
+        justify-content: space-evenly;
+        border: 1px solid $OffBlack;
+        height: 2rem;
+        align-items: center;
+
+        &-item {
+            font-size: 0.8rem;
+            color: #9c9fa0;
+            flex-basis: 40%;
+
+            &-last{
+                flex-basis: 20%;
+            }
+            &--ask {
+                color: #873a2a;
+                &--decimal{
+                    color: #c5573e;
+                }
+            }
+            &--bid {
+                color: #4f8147;
+                &--decimal {
+                    color: #74bd62;
+                }
+            }
+
+        }
+
+        &--footer{
+            flex-basis: 10%;
+        }
+    }
+    &__asks{
+        flex-basis: 40%;
+    }
+    &__bids{
+        flex-basis: 40%;
+    }
+    &__row {
+        display: flex;
+    }
+    &__data {
+        display: flex;
+        flex-direction: column;
+        row-gap: 0.25rem;
+    }
+
+}
+.btn {
+    background: none;
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 1px solid $OffBlack;
+    color: $OffWhite;
+    // height: 20px;
 }
