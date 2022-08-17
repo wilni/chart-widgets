@@ -38,10 +38,16 @@
                 flex-basis: 20%;
             }
             &--ask {
-                color: #d05c40;
+                color: #873a2a;
+                &--decimal{
+                    color: #c5573e;
+                }
             }
             &--bid {
-                color: #74bd62;
+                color: #4f8147;
+                &--decimal {
+                    color: #74bd62;
+                }
             }
 
         }

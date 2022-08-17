@@ -5,14 +5,16 @@ import { useEffect, useRef } from "react";
 function Chart(props) {
     const { data, currentBar } = props;
     const chartContainerRef = useRef();
+    const chart = useRef();
+    const candleSeriesRef = useRef();
 
     useEffect(() => {
 
         const handleResize = () => {
-            chart.applyOptions({ width: chartContainerRef.current.clientWidth });
+            chart.current.applyOptions({ width: chartContainerRef.current.clientWidth });
         };
 
-        const chart = createChart(chartContainerRef.current, {
+        chart.current = createChart(chartContainerRef.current, {
             timeScale: {
                 visible: true,
                 timeVisible: true,
@@ -40,11 +42,10 @@ function Chart(props) {
             },
         });
 
-        chart.timeScale().fitContent();
-        console.log("chart log", chart);
+        chart.current.timeScale().fitContent();
 
         //candle data
-        const candleSeries = chart.addCandlestickSeries({
+        candleSeriesRef.current = chart.current.addCandlestickSeries({
             upColor: '#469dcb',
             downColor: '#f1b45b',
             borderDownColor: '#f1b45b',
@@ -53,21 +54,25 @@ function Chart(props) {
             wickUpColor: '#469dcb',
         });
 
-        candleSeries.setData(data);
-        if(currentBar !== null){
-                candleSeries.update(currentBar)
-         }
-
+        candleSeriesRef.current.setData(data);
 
         window.addEventListener('resize', handleResize);
 
         return () => {
             window.removeEventListener('resize', handleResize);
 
-            chart.remove();
+            chart.current.remove();
         };
 
     }, [data]);
+
+
+    //hook for updating 
+    useEffect(() => {
+        if (currentBar !== null) {
+            candleSeriesRef.current.update(currentBar)
+        }
+    }, [currentBar])
 
     return <div ref={chartContainerRef} className="chart" />;
 }
