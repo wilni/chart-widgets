@@ -4,7 +4,7 @@ function BestBidAsk({ price, quantity, type, by }) {
     return (
         <div className='data-box'>
             <div className={`data-box__header data-box__header--${type === 'Ask' ? 'ask' : 'bid'}`}>
-                <h4>{`Best ${type}: ${by}`}</h4>
+                <h4>{`Best ${type}:`}</h4>
             </div>
             <div className='data-box__content'>
                 <div className='data-box__content-details data-box__content-details--left'>

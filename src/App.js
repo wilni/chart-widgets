@@ -4,16 +4,14 @@ import axios from "axios";
 import LadderView from './components/LadderView/LadderView.js';
 import BestBidAsk from './components/BestBidAsk/BestBidAsk.js';
 import Chart from './components/Chart/Chart.js';
-import candleData from './data.js';
 const timestamp = require('unix-timestamp');
 timestamp.round = true;
 
 function App() {
+  const currencies = ['BTC-USD', 'ETH-USD', 'BCH-USD', 'LTC-USD'];
   // state for selected currency pair, price and history
-  const [currencies, setCurrencies] = useState(['BTC-USD', 'ETH-USD', 'BCH-USD', 'LTC-USD'])
   const [pair, setPair] = useState('BTC-USD');
-  const [price, setPrice] = useState(() => '0.00');
-  const [pairHistory, setPairHistory] = useState(candleData);
+  const [pairHistory, setPairHistory] = useState([]);
   const [timeFrame, setTimeFrame] = useState('60');
   const [currentBar, setCurrentBar] = useState(null);
   const ws = useRef(null);
@@ -46,19 +44,20 @@ function App() {
     });
 
     ws.current.addEventListener('message', function (event) {
-      let priceData = JSON.parse(event.data);
-      console.log("price data", priceData);
-      if(priceData.type === "ticker"){
-        let ticker = {
-          time: timestamp.fromDate(priceData.time),
-          high: priceData.high_24h,
-          low: priceData.low_24h,
-          open: priceData.open_24h,
-          close: priceData.low_24h
-        }
-        setCurrentBar(ticker)
-      }
-      setPrice(priceData.price)
+      // let priceData = JSON.parse(event.data);
+      //update candle data to add live ticks
+      // console.log("price data", priceData);
+
+      // if(priceData.type === "ticker"){
+      //   let ticker = {
+      //     time: timestamp.fromDate(priceData.time),
+      //     high: priceData.high_24h,
+      //     low: priceData.low_24h,
+      //     open: priceData.open_24h,
+      //     close: priceData.low_24h
+      //   }
+      //   setCurrentBar(ticker)
+      // }
     });
   }, [])
 
@@ -125,12 +124,12 @@ function App() {
           </select>
         </nav>
         <div className='bestBidAsk'>
-          <BestBidAsk type="Bid" price={bestBid} quantity={bestBidQty} by={'itbit'} />
-          <BestBidAsk type="Ask" price={bestAsk} quantity={bestAskQty} by={'kraken'} />
+          <BestBidAsk type="Bid" price={bestBid} quantity={bestBidQty}  />
+          <BestBidAsk type="Ask" price={bestAsk} quantity={bestAskQty}  />
         </div>
         <Chart data={pairHistory} currentBar={currentBar} />
       </section>
-      <LadderView className="aside" />
+      <LadderView className="aside" pair={pair} />
     </main>
   );
 }
