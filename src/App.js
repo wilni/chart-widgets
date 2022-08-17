@@ -5,135 +5,132 @@ import LadderView from './components/LadderView/LadderView.js';
 import BestBidAsk from './components/BestBidAsk/BestBidAsk.js';
 import Chart from './components/Chart/Chart.js';
 import candleData from './data.js';
-
-// const data = [
-//   { time: "2019-04-11", value: 80.01 },
-//   { time: "2019-04-12", value: 96.63 },
-//   { time: "2019-04-13", value: 76.64 },
-//   { time: "2019-04-14", value: 81.89 },
-//   { time: "2019-04-15", value: 74.43 },
-//   { time: "2019-04-16", value: 80.01 },
-//   { time: "2019-04-17", value: 96.63 },
-//   { time: "2019-04-18", value: 76.64 },
-//   { time: "2019-04-19", value: 81.89 },
-//   { time: "2019-04-20", value: 74.43 }
-// ]
-
+const timestamp = require('unix-timestamp');
+timestamp.round = true;
 
 function App() {
-// state for selected currency pair, price and history
-const [currencies, setCurrencies] = useState([]);
-const [pair, setPair] = useState('ETH-USD');
-const [price, setPrice] = useState(() => '0.00');
-const [pairHistory, setPairHistory] = useState(candleData);
-const [timeFrame, setTimeFrame] = useState('60');
-const ws = useRef(null);
+  // state for selected currency pair, price and history
+  const [currencies, setCurrencies] = useState(['BTC-USD', 'ETH-USD', 'BCH-USD', 'LTC-USD'])
+  const [pair, setPair] = useState('BTC-USD');
+  const [price, setPrice] = useState(() => '0.00');
+  const [pairHistory, setPairHistory] = useState(candleData);
+  const [timeFrame, setTimeFrame] = useState('60');
+  const [currentBar, setCurrentBar] = useState(null);
+  const ws = useRef(null);
 
-//state for best bid and ask and thier quantity
-const [bestAsk, setBestAsk] = useState('0.00');
-const [bestBid, setBestBid] = useState('0.00');
-const [bestBidQty, setBestBidQty] = useState('0.00');
-const [bestAskQty, setBestAskQty] = useState('0.00');
+  //state for best bid and ask and thier quantity
+  const [bestAsk, setBestAsk] = useState('0.00');
+  const [bestBid, setBestBid] = useState('0.00');
+  const [bestBidQty, setBestBidQty] = useState('0.00');
+  const [bestAskQty, setBestAskQty] = useState('0.00');
 
-let msg = {
-  "type": "subscribe",
-  "channels": [
+  let msg = {
+    "type": "subscribe",
+    "channels": [
       {
-          "name": "ticker",
-          "product_ids": [
-            `${pair}`,
-          ]
+        "name": "ticker_batch",
+        "product_ids": [
+          `${pair}`,
+        ]
       }
-  ]
-};
+    ]
+  };
 
-//hook for initial render 
-useEffect(() => {
-  ws.current = new WebSocket("wss://ws-feed.pro.coinbase.com");
+  //hook for initial render 
+  useEffect(() => {
+    ws.current = new WebSocket("wss://ws-feed.pro.coinbase.com");
 
-  ws.current.addEventListener('open', function (event) {
-  console.log('Successfully connected to Coinbase Websocket API!');
-  ws.current.send(JSON.stringify(msg));
-});
+    ws.current.addEventListener('open', function (event) {
+      console.log('connected to Coinbase Websocket API');
+      ws.current.send(JSON.stringify(msg));
+    });
 
-ws.current.addEventListener('message', function (event) {
-  let priceData = JSON.parse(event.data);
-  console.log("price data",priceData);
-  setPrice(priceData.price)
-});
-}, [])
-
-
-// hook to render order book info into top of book
-useEffect(() => {
-  axios.get(`https://api.exchange.coinbase.com/products/${pair}/book`)
-  .then(res => {
-    console.log('res form order book', res.data)
-    console.log('res form order book 2', res.data.bids[0], res.data.asks[0])
-    setBestBid(res.data.bids[0][0]);
-    setBestBidQty(res.data.bids[0][1]);
-    setBestAsk(res.data.asks[0][0]);
-    setBestAskQty(res.data.asks[0][1]);
-  })
-
-  axios.get(`https://api.exchange.coinbase.com/products/${pair}/candles/?granularity=${timeFrame}`)
-  .then(res => {
-    let data = res.data; 
-    let timestamps = [];
-    data = data.map(el => {
-      return (
-        {
-          time: el[0],
-          low: el[1],
-          high: el[2],
-          open: el[3],
-          close: el[4]
+    ws.current.addEventListener('message', function (event) {
+      let priceData = JSON.parse(event.data);
+      console.log("price data", priceData);
+      if(priceData.type === "ticker"){
+        let ticker = {
+          time: timestamp.fromDate(priceData.time),
+          high: priceData.high_24h,
+          low: priceData.low_24h,
+          open: priceData.open_24h,
+          close: priceData.low_24h
         }
-      )
-    }).sort((x, y) => {
-      return x.time - y.time;
-    })
-    setPairHistory(data);
+        setCurrentBar(ticker)
+      }
+      setPrice(priceData.price)
+    });
+  }, [])
+
+
+  // hook to render and set chart data
+  useEffect(() => {
+    axios.get(`https://api.exchange.coinbase.com/products/${pair}/candles/?granularity=${timeFrame}`)
+      .then(res => {
+        let data = res.data;
+        data = data.map(el => {
+          return (
+            {
+              time: el[0],
+              low: el[1],
+              high: el[2],
+              open: el[3],
+              close: el[4]
+            }
+          )
+        }).sort((x, y) => {
+          return x.time - y.time;
+        })
+        setPairHistory(data);
+      })
+  }, [pair, timeFrame])
+
+  // hook to update best bid/ ask real-time
+  useEffect(() => {
+    axios.get(`https://api.exchange.coinbase.com/products/${pair}/book`)
+      .then(res => {
+        setBestBid(res.data.bids[0][0]);
+        setBestBidQty(res.data.bids[0][1]);
+        setBestAsk(res.data.asks[0][0]);
+        setBestAskQty(res.data.asks[0][1]);
+      })
   })
 
-
-}, [pair])
-
-
-//hook to update best bid/ ask real-time
-// useEffect(() => {
-//   setInterval(() => {
-//     axios.get(`https://api.exchange.coinbase.com/products/${pair}/book`)
-//     .then(res => {
-//       setBestBid(res.data.bids[0][0]);
-//       setBestBidQty(res.data.bids[0][1]);
-//       setBestAsk(res.data.asks[0][0]);
-//       setBestAskQty(res.data.asks[0][1]);
-//     })
-//   }, 1500);
-// })
-
+  const handleTimeChange = (e) => {
+    setTimeFrame(e.target.value)
+  }
+  const handlePairChange = (e) => {
+    setPair(e.target.value)
+  }
 
   return (
     <main className="App">
       <section className='content'>
-          <nav className='content__nav'>
-            <span className='content__label'>Real Time Chart</span>
-          <select name="pairs" id="pair-select" className='content__dropdown'>
-                <option value="">--Please choose an option--</option>
-                <option value="BTC">BTC-USD</option>
-                <option value="ETH">ETH-USD</option>
-                <option value="LTC">LTC-USD</option>
-                <option value="BCH">BCH-USD</option>
-            </select>
-          </nav>
-          <div className='bestBidAsk'> 
-            <BestBidAsk type="Bid" price={bestBid} quantity={bestBidQty} by={'itbit'} />
-            <BestBidAsk type="Ask" price={bestAsk} quantity={bestAskQty} by={'kraken'} />
-          </div>
-          <Chart data={pairHistory}/>
+        <nav className='content__nav'>
+          <span className='content__label'>Real Time Chart</span>
+          <select name="pairs" id="pair-select" className='content__dropdown' onChange={handlePairChange}>
+            {currencies.map((el, idx) => {
+              return (
+                <option key={idx} value={el}>{el}</option>
+              )
+            })}
+          </select>
+          <select name="timeFrames" id="time-select" className='content__dropdown' onChange={handleTimeChange}>
+            <option value="60">1m</option>
+            <option value="300">5m</option>
+            <option value="900">15m</option>
+            <option value="3600">1h</option>
+            <option value="21600">6h</option>
+            <option value="86400">1d</option>
+          </select>
+        </nav>
+        <div className='bestBidAsk'>
+          <BestBidAsk type="Bid" price={bestBid} quantity={bestBidQty} by={'itbit'} />
+          <BestBidAsk type="Ask" price={bestAsk} quantity={bestAskQty} by={'kraken'} />
+        </div>
+        <Chart data={pairHistory} currentBar={currentBar} />
       </section>
-      <LadderView className="aside"/>
+      <LadderView className="aside" />
     </main>
   );
 }
