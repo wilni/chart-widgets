@@ -14,12 +14,21 @@ const {data} = props;
 
     const chart = createChart(chartContainerRef.current, {
         timeScale: {
+            visible:true,
             timeVisible: true,
-        secondsVisible: false,
+        secondsVisible: true,
         },
         layout: {
             background: { type: ColorType.Solid, color: 'white' },
             textColor: 'black',
+        },
+        grid: {
+            vertLines: {
+                color: 'rgba(127, 127, 127, 0.4)',
+            },
+            horzLines: {
+                color: 'rgba(127, 127, 127, 0.4)',
+            },
         },
         width: chartContainerRef.current.clientWidth,
         height: 300,
@@ -34,8 +43,18 @@ const {data} = props;
     chart.timeScale().fitContent();
     console.log("chart log",chart);
 
-    const lineSeries = chart.addLineSeries({color: '#469dcb'});
-    lineSeries.setData(data);
+    //candle data
+    var candleSeries = chart.addCandlestickSeries({
+        upColor: '#469dcb',
+        downColor: '#f1b45b',
+        borderDownColor: '#f1b45b',
+        borderUpColor: '#469dcb',
+        wickDownColor: '#f1b45b',
+        wickUpColor: '#469dcb',
+      });
+
+      candleSeries.setData(data);
+
 
     window.addEventListener('resize', handleResize);
 
