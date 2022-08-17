@@ -4,19 +4,20 @@ import axios from "axios";
 import LadderView from './components/LadderView/LadderView.js';
 import BestBidAsk from './components/BestBidAsk/BestBidAsk.js';
 import Chart from './components/Chart/Chart.js';
+import candleData from './data.js';
 
-const data = [
-  { time: "2019-04-11", value: 80.01 },
-  { time: "2019-04-12", value: 96.63 },
-  { time: "2019-04-13", value: 76.64 },
-  { time: "2019-04-14", value: 81.89 },
-  { time: "2019-04-15", value: 74.43 },
-  { time: "2019-04-16", value: 80.01 },
-  { time: "2019-04-17", value: 96.63 },
-  { time: "2019-04-18", value: 76.64 },
-  { time: "2019-04-19", value: 81.89 },
-  { time: "2019-04-20", value: 74.43 }
-]
+// const data = [
+//   { time: "2019-04-11", value: 80.01 },
+//   { time: "2019-04-12", value: 96.63 },
+//   { time: "2019-04-13", value: 76.64 },
+//   { time: "2019-04-14", value: 81.89 },
+//   { time: "2019-04-15", value: 74.43 },
+//   { time: "2019-04-16", value: 80.01 },
+//   { time: "2019-04-17", value: 96.63 },
+//   { time: "2019-04-18", value: 76.64 },
+//   { time: "2019-04-19", value: 81.89 },
+//   { time: "2019-04-20", value: 74.43 }
+// ]
 
 
 function App() {
@@ -24,7 +25,8 @@ function App() {
 const [currencies, setCurrencies] = useState([]);
 const [pair, setPair] = useState('ETH-USD');
 const [price, setPrice] = useState(() => '0.00');
-const [pairHistory, setPairHistory] = useState([]);
+const [pairHistory, setPairHistory] = useState(candleData);
+const [timeFrame, setTimeFrame] = useState('60');
 const ws = useRef(null);
 
 //state for best bid and ask and thier quantity
@@ -56,7 +58,7 @@ useEffect(() => {
 
 ws.current.addEventListener('message', function (event) {
   let priceData = JSON.parse(event.data);
-  console.log("price data",priceData.price);
+  console.log("price data",priceData);
   setPrice(priceData.price)
 });
 }, [])
@@ -74,21 +76,42 @@ useEffect(() => {
     setBestAskQty(res.data.asks[0][1]);
   })
 
-  axios.get(`https://api.coinbase.com/v2/prices/${pair}/historic`)
+  axios.get(`https://api.exchange.coinbase.com/products/${pair}/candles/?granularity=${timeFrame}`)
   .then(res => {
-    let data = res.data.data.prices
-    let parsedData = data.map(el => {
-      console.log('el', el)
-      let timeStr = el.time.split("").splice(0,10).join('') //+ " " + el.time.split("").splice(11,5).join('');
-      return {
-        time: timeStr,
-        price: el.price
-      }
+    let data = res.data; 
+    let timestamps = [];
+    data = data.map(el => {
+      return (
+        {
+          time: el[0],
+          low: el[1],
+          high: el[2],
+          open: el[3],
+          close: el[4]
+        }
+      )
+    }).sort((x, y) => {
+      return x.time - y.time;
     })
     setPairHistory(data);
-    console.log("console from price history",parsedData);
   })
+
+
 }, [pair])
+
+
+//hook to update best bid/ ask real-time
+// useEffect(() => {
+//   setInterval(() => {
+//     axios.get(`https://api.exchange.coinbase.com/products/${pair}/book`)
+//     .then(res => {
+//       setBestBid(res.data.bids[0][0]);
+//       setBestBidQty(res.data.bids[0][1]);
+//       setBestAsk(res.data.asks[0][0]);
+//       setBestAskQty(res.data.asks[0][1]);
+//     })
+//   }, 1500);
+// })
 
 
   return (
